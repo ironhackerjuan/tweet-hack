@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const User = require('../models/user.model')
+const nodemailer = require('../config/mailer.config');
 
 module.exports.login = (req, res, next) => {
   res.render('users/login')
@@ -12,9 +13,19 @@ module.exports.doLogin = (req, res, next) => {
         user.checkPassword(req.body.password)
           .then(match => {
             if (match) {
-              req.session.userId = user._id
+              if (user.activation.active) {
+                req.session.userId = user._id
 
-              res.redirect('/tweets')
+                res.redirect('/tweets')
+              } else {
+                res.render('users/login', {
+                  error: {
+                    validation: {
+                      message: 'Your account is not active, check your email!'
+                    }
+                  }
+                })
+              }
             } else {
               res.render('users/login', {
                 error: {
@@ -46,8 +57,11 @@ module.exports.createUser = (req, res, next) => {
   const user = new User(req.body)
 
   user.save()
-    .then(() => {
-      res.redirect("/login");
+    .then(user => {
+      nodemailer.sendValidationEmail(user.email, user.activation.token, user.name);
+      res.render('users/login', {
+        message: 'Check your email for activation'
+      })
     })
     .catch((error) => {
       if (error instanceof mongoose.Error.ValidationError) {
@@ -66,6 +80,31 @@ module.exports.createUser = (req, res, next) => {
       }
     })
     .catch(next)
+}
+
+module.exports.activateUser = (req, res, next) => {
+  User.findOne({ "activation.token": req.params.token })
+    .then(user => {
+      if (user) {
+        user.activation.active = true;
+        user.save()
+          .then(user => {
+            res.render('users/login', {
+                message: 'Your account has been activated, log in below!'
+              })
+          })
+        .catch(e => next)
+      } else {
+        res.render('users/login', {
+          error: {
+            validation: {
+              message: 'Invalid link'
+            }
+          }
+        })
+      }
+    })
+    .catch(e => next)
 }
 
 module.exports.logout = (req, res, next) => {

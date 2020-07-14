@@ -3,6 +3,15 @@ const mongoose = require("mongoose");
 
 const EMAIL_PATTERN = /^(([^<>()\[\]\.,;:\s@\"]+(\.[^<>()\[\]\.,;:\s@\"]+)*)|(\".+\"))@(([^<>()[\]\.,;:\s@\"]+\.)+[^<>()[\]\.,;:\s@\"]{2,})$/i;
 
+const generateRandomToken = () => {
+  const characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let token = '';
+  for (let i = 0; i < 25; i++) {
+    token += characters[Math.floor(Math.random() * characters.length)];
+  }
+  return token;
+}
+
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -35,10 +44,20 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
     maxlength: 100
+  },
+  activation: {
+    active: {
+      type: Boolean,
+      default: false
+    },
+    token: {
+      type: String,
+      default: generateRandomToken
+    }
   }
 });
 
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
   if (this.isModified('password')) {
     bcrypt.hash(this.password, 10).then((hash) => {
       this.password = hash;
@@ -49,7 +68,7 @@ userSchema.pre('save', function(next) {
   }
 })
 
-userSchema.methods.checkPassword = function(password) {
+userSchema.methods.checkPassword = function (password) {
   return bcrypt.compare(password, this.password);
 }
 
