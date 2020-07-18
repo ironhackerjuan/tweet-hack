@@ -14,4 +14,5 @@ router.post('/users', sessionMiddleware.isNotAuthenticated, usersController.crea
 router.get('/activate/:token', sessionMiddleware.isNotAuthenticated, usersController.activateUser);
 router.post('/logout', sessionMiddleware.isAuthenticated, usersController.logout);
 router.get('/tweets', sessionMiddleware.isAuthenticated, tweetsController.list);
+router.get('/tweets/:id/like', sessionMiddleware.isAuthenticated, tweetsController.like)
 module.exports = router;

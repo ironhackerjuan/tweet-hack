@@ -28,6 +28,13 @@ tweetSchema.virtual("comments", {
   justOne: false,
 });
 
+tweetSchema.virtual("likes", {
+  ref: "Like",
+  localField: "_id",
+  foreignField: "tweet",
+  justOne: false
+});
+
 const Tweet = mongoose.model("Tweet", tweetSchema);
 
 module.exports = Tweet;
