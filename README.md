@@ -13,3 +13,5 @@ or
 
 npm start
 ```
+
+copy `.env.template` file to `.env` and complete with your credentials.
